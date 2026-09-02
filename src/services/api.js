@@ -46,40 +46,19 @@ import { API_URL } from "../config";
 // ║  variações desta mesma receita.                                     ║
 // ╚═════════════════════════════════════════════════════════════════════╝
 export async function login(email, senha) {
-  // 1) DISPARA o pedido e ESPERA a resposta chegar.
-  //    `await` = "segura aqui até voltar". Sem ele você recebe uma
-  //    Promise (uma promessa), não os dados.
   const resposta = await fetch(`${API_URL}/api/usuarios/login`, {
-    // 2) O MÉTODO diz a INTENÇÃO do pedido:
-    //    GET = ler | POST = criar | PUT = atualizar | DELETE = apagar
     method: "POST",
-
-    // 3) O HEADER é o "envelope" do pedido. Esta linha avisa ao servidor:
-    //    "o conteúdo que estou te mandando é JSON".
-    //    Sem ela o Express não consegue ler o req.body e você recebe 400.
     headers: { "Content-Type": "application/json" },
-
-    // 4) O BODY é a carga. Só existe em POST/PUT/PATCH.
-    //    JSON.stringify transforma o objeto JS em TEXTO, porque pela
-    //    internet só trafega texto.
     body: JSON.stringify({ email, senha }),
   });
 
-  // 5) A resposta chegou como texto. Traduzimos de volta para objeto JS.
-  //    Repare no segundo `await`: ler o corpo também é assíncrono.
   const dados = await resposta.json();
 
-  // 6) ⚠️ ARMADILHA CLÁSSICA: o fetch NÃO dá erro quando o status é 401 ou
-  //    404. Para o fetch, "recebi uma resposta" já é sucesso.
-  //    Quem avisa se deu certo é `resposta.ok` (true de 200 a 299).
-  //    Se você esquecer este if, um login errado passa como se tivesse dado
-  //    certo — e o app quebra 3 telas depois, sem você entender por quê.
   if (!resposta.ok) {
     throw new Error(dados.mensagem || "Não foi possível entrar.");
   }
 
-  // 7) Devolve os dados prontos para o componente usar.
-  return dados; // → { sucesso, mensagem, token, usuario: { id, nome, email } }
+  return dados;
 }
 
 // ╔═════════════════════════════════════════════════════════════════════╗
@@ -109,7 +88,7 @@ export async function login(email, senha) {
 //     Sua mensagem tem que aparecer em vermelho na tela.
 //
 export async function cadastrar(nome, email, senha) {
-  const resposta = await fetch(`${"https://backend-rose-delta-99.vercel.app"}/api/usuarios/cadastrar`, {
+  const resposta = await fetch(`${API_URL}/api/usuarios/cadastrar`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ nome, email, senha }),
@@ -121,7 +100,7 @@ export async function cadastrar(nome, email, senha) {
     throw new Error(dados.mensagem || "Não foi possível criar a conta.");
   }
 
-  return dados; // { sucesso, mensagem, token, usuario }
+  return dados;
 }
 
 // ╔═════════════════════════════════════════════════════════════════════╗
@@ -157,8 +136,20 @@ export async function cadastrar(nome, email, senha) {
 //  🧪 Teste o erro: apague uma letra do token antes de mandar e veja o 401.
 //
 export async function listarUsuarios(token) {
-  // ↓↓↓ APAGUE ESTA LINHA E ESCREVA SEU CÓDIGO ↓↓↓
-  throw new Error("🚧 TAREFA 2 ainda não foi implementada (src/services/api.js)");
+  const resposta = await fetch(`${API_URL}/api/usuarios`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const dados = await resposta.json();
+
+  if (!resposta.ok) {
+    throw new Error(dados.mensagem || "Não foi possível carregar a lista de usuários.");
+  }
+
+  return dados.usuarios;
 }
 
 // ╔═════════════════════════════════════════════════════════════════════╗
